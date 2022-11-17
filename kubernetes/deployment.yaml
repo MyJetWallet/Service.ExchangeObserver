@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    description: services-admindatasource
+  labels:
+    app: admindatasource
+    environment: Development
+    tier: Service
+  name: admindatasource
+  namespace: spot-services
+spec:
+  revisionHistoryLimit: 1
+  minReadySeconds: 10
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  replicas: 1
+  selector:
+    matchLabels:
+      app: admindatasource
+  template:
+    metadata:
+      labels:
+        app: admindatasource
+      name: admindatasource
+    spec:
+      nodeSelector:
+        agentpool: spot
+      imagePullSecrets:
+        - name: simple-trading
+      containers:
+      - name: admindatasource
+        image: spotsimpleregistry.azurecr.io/spot/myjetwallet.service.admindatasource-test:latest
+        imagePullPolicy: Always
+        lifecycle:
+          postStart:
+            exec:
+             command:
+             - /bin/sh
+             - -c 
+             - "/bin/echo 'options single-request-reopen' >> /etc/resolv.conf"
+        ports:
+        - containerPort: 8080
+        - containerPort: 80
+        readinessProbe:
+          httpGet:
+            path: /api/isalive
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          failureThreshold: 3
+          timeoutSeconds: 3
+        livenessProbe:
+          httpGet:
+            path: /api/isalive
+            port: 8080
+          initialDelaySeconds: 20
+          periodSeconds: 20
+        resources:
+          requests:
+            memory: 150Mi 
+            cpu: 50m 
+          limits:
+            memory: 300Mi 
+            cpu: 100m 
+        env:
+        - name: SETTINGS_URL
+          value: "http://192.168.70.80:9899/AdminDatasource"
+        - name: ConsoleOutputLogLevel
+          value: "Debug"
+        - name: ENV_INFO
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name

@@ -1,0 +1,40 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <UserSecretsId>ABE3230F-230D-45D2-8E6C-E31DB0A2524B</UserSecretsId>
+    <LangVersion>8.0</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="8.0.0" />
+    <PackageReference Include="Grpc.AspNetCore" Version="2.50.0" />
+    <PackageReference Include="JetBrains.Annotations" Version="2022.3.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0" />
+    <PackageReference Include="MyJetWallet.Domain.ExternalMarketApi" Version="1.4.5" />
+    <PackageReference Include="MyJetWallet.Sdk.GrpcMetrics" Version="2.2.1" />
+    <PackageReference Include="MyJetWallet.Sdk.GrpcSchema" Version="1.0.6" />
+    <PackageReference Include="MyJetWallet.Sdk.NoSql" Version="2.2.11" />
+    <PackageReference Include="MyJetWallet.Sdk.Service" Version="2.2.4" />
+    <PackageReference Include="MyJetWallet.Service.IndexPrices.Client" Version="1.7.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="prometheus-net.AspNetCore" Version="7.0.0" />
+    <PackageReference Include="protobuf-net.Grpc.AspNetCore" Version="1.0.179" />
+    <PackageReference Include="SimpleTrading.BaseMetrics" Version="1.0.3" />
+    <PackageReference Include="SimpleTrading.ServiceStatusReporterConnector" Version="1.0.9" />
+    <PackageReference Include="MySettingsReader" Version="1.2.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Service.ExchangeObserver.Domain\Service.ExchangeObserver.Domain.csproj" />
+    <ProjectReference Include="..\Service.ExchangeObserver.Grpc\Service.ExchangeObserver.Grpc.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Dockerfile">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>
