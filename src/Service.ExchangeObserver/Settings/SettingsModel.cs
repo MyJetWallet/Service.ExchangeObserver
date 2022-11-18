@@ -26,20 +26,6 @@ namespace Service.ExchangeObserver.Settings
         
         [YamlProperty("ExchangeObserver.ExternalApiGrpcUrl")]
         public string ExternalApiGrpcUrl { get; set; }
-        
-        [YamlProperty("ExchangeObserver.ExchangeSettings")]
-        public Dictionary<string, ExchangeBalanceSettings> ExternalExchanges { get; set; }
-    }
 
-    public class ExchangeBalanceSettings
-    {
-        [YamlProperty("BorrowedThresholdUsd")]
-        public int BorrowedThresholdUsd { get; set; } 
-        
-        [YamlProperty("MinimalExchangeBalanceUsd")]
-        public int MinimalExchangeBalanceUsd { get; set; }
-        
-        [YamlProperty("MaximumExchangeBalanceUsd")]
-        public int MaximumExchangeBalanceUsd { get; set; }
     }
 }
