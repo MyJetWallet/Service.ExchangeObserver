@@ -25,10 +25,10 @@ namespace Service.ExchangeObserver.Services
 
         public async Task<GetBalancesResponse> GetBinanceMarginBalancesAsync()
         {
-            return new GetBalancesResponse
+            return await _externalMarket.GetSecondaryBalancesAsync(new GetBalancesRequest
             {
-                Balances = new List<ExchangeBalance>()
-            };
+                ExchangeName = "Binance"
+            });
         }
 
         public async Task<FbBalancesResponse> GetFireblocksBalancesAsync()

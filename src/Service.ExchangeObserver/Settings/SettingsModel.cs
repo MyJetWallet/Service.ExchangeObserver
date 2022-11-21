@@ -27,5 +27,8 @@ namespace Service.ExchangeObserver.Settings
         [YamlProperty("ExchangeObserver.ExternalApiGrpcUrl")]
         public string ExternalApiGrpcUrl { get; set; }
 
+        [YamlProperty("ExchangeObserver.PostgresConnectionString")]
+        public string PostgresConnectionString { get; set; }
+
     }
 }

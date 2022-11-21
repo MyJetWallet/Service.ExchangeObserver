@@ -18,6 +18,7 @@ namespace Service.ExchangeObserver.Domain.Models.NoSql
         {
             return new BinanceExchangeAssetNoSqlEntity
             {
+                PartitionKey = GeneratePartitionKey(),
                 RowKey = GenerateRowKey(assetSymbol),
                 AssetSymbol = assetSymbol,
                 Weight = weight,

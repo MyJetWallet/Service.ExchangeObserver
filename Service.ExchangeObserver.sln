@@ -32,6 +32,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Service.ExchangeObserver.Domain", "src\Service.ExchangeObserver.Domain\Service.ExchangeObserver.Domain.csproj", "{5CFE74A4-CDBB-4E2D-9C0A-9CEF20DCB38B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Service.ExchangeObserver.Postgres", "src\Service.ExchangeObserver.Postgres\Service.ExchangeObserver.Postgres.csproj", "{050AE531-80AD-4CA5-ADAE-FACC9472A1AA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -66,6 +68,10 @@ Global
 		{5CFE74A4-CDBB-4E2D-9C0A-9CEF20DCB38B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5CFE74A4-CDBB-4E2D-9C0A-9CEF20DCB38B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5CFE74A4-CDBB-4E2D-9C0A-9CEF20DCB38B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{050AE531-80AD-4CA5-ADAE-FACC9472A1AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{050AE531-80AD-4CA5-ADAE-FACC9472A1AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{050AE531-80AD-4CA5-ADAE-FACC9472A1AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{050AE531-80AD-4CA5-ADAE-FACC9472A1AA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -77,6 +83,7 @@ Global
 		{B64315EC-2356-4586-8A89-111D88A942B8} = {EB832FF1-4E01-40ED-BAC4-5ECF70F5C108}
 		{FF868A2B-24FA-42B0-8400-95EDEE689678} = {D11EB899-A148-4C9B-B340-B907EF71C4A2}
 		{5CFE74A4-CDBB-4E2D-9C0A-9CEF20DCB38B} = {446301A0-97F2-4921-BA0B-32B76039C73B}
+		{050AE531-80AD-4CA5-ADAE-FACC9472A1AA} = {446301A0-97F2-4921-BA0B-32B76039C73B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6BF00C9D-AD55-40F2-8FE3-E5C3559B3E26}

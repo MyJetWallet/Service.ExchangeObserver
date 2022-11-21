@@ -5,6 +5,12 @@ namespace Service.ExchangeObserver.Services
 {
     public class ExchangeGatewayMock : IExchangeGateway
     {
+        public async Task<ExchangeResponse> TransferMarginToBorrowed(string assetSymbol, decimal amount)
+        {
+            Console.WriteLine($"Transfer Binance Margin to Borrow: {amount} {assetSymbol}");
+            return new ExchangeResponse() {IsSuccess = true};
+        }
+
         public async Task<ExchangeResponse> TransferBinanceMainToMargin(string assetSymbol, decimal amount)
         {
             Console.WriteLine($"Transfer Binance Main to Margin: {amount} {assetSymbol}");
@@ -28,6 +34,7 @@ namespace Service.ExchangeObserver.Services
 
     public interface IExchangeGateway
     {
+        Task<ExchangeResponse> TransferMarginToBorrowed(string assetSymbol, decimal amount);
         Task<ExchangeResponse> TransferBinanceMainToMargin(string assetSymbol, decimal amount);
         Task<ExchangeResponse> TransferFireblocksToBinance(string fireblocksAsset, string fireblocksNetwork, int vaultAccountId, string binanceAssetSymbol, decimal amount);
         Task<ExchangeResponse> TransferFromBinanceMarginToFireblocks(string assetSymbol, decimal amount);

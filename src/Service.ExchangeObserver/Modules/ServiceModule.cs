@@ -18,6 +18,7 @@ namespace Service.ExchangeObserver.Modules
             builder.RegisterMyNoSqlWriter<BinanceToFireblocksAssetNoSqlEntity>((() => Program.Settings.MyNoSqlWriterUrl),BinanceToFireblocksAssetNoSqlEntity.TableName);
             builder.RegisterMyNoSqlWriter<FbVaultAccountMapNoSqlEntity>((() => Program.Settings.MyNoSqlWriterUrl),FbVaultAccountMapNoSqlEntity.TableName);
             builder.RegisterMyNoSqlWriter<ObserverSettingsNoSqlEntity>((() => Program.Settings.MyNoSqlWriterUrl),ObserverSettingsNoSqlEntity.TableName);
+            builder.RegisterMyNoSqlWriter<TransfersMonitorNoSqlEntity>((() => Program.Settings.MyNoSqlWriterUrl),TransfersMonitorNoSqlEntity.TableName);
 
             var client = builder.CreateNoSqlClient(Program.Settings.MyNoSqlReaderHostPort, Program.LogFactory);
             builder.RegisterIndexPricesClient(client);
