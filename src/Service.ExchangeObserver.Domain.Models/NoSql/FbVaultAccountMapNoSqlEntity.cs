@@ -12,9 +12,9 @@ namespace Service.ExchangeObserver.Domain.Models.NoSql
         public static string GenerateRowKey(int vaultAccountId) => vaultAccountId.ToString();
         
         public int VaultAccountId { get; set; }
-        public Dictionary<string, decimal> FireblocksAssetsWithBalances { get; set; }
+        public List<AssetAndBalance> FireblocksAssetsWithBalances { get; set; }
         
-        public static FbVaultAccountMapNoSqlEntity Create(int vaultAccountId, Dictionary<string, decimal> fireblocksAssets)
+        public static FbVaultAccountMapNoSqlEntity Create(int vaultAccountId, List<AssetAndBalance> fireblocksAssets)
         {
             return new FbVaultAccountMapNoSqlEntity
             {
@@ -24,5 +24,11 @@ namespace Service.ExchangeObserver.Domain.Models.NoSql
                 FireblocksAssetsWithBalances = fireblocksAssets,
             };
         }
+    }
+
+    public class AssetAndBalance
+    {
+        public string Asset { get; set; }
+        public decimal MinBalance { get; set; }
     }
 }

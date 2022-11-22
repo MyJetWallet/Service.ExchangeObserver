@@ -112,6 +112,11 @@ namespace Service.ExchangeObserver.Jobs
                         }
                     });
                 }
+                else
+                {
+                    _logger.LogError("ERROR");
+                    break;
+                }
                 
                 if(borrowedBalance == 0)
                 {
@@ -147,6 +152,11 @@ namespace Service.ExchangeObserver.Jobs
                                 TimeStamp = DateTime.UtcNow
                             }
                         });
+                    }                
+                    else
+                    {
+                        _logger.LogError("ERROR");
+                        break;
                     }
                 }
                 
@@ -171,14 +181,14 @@ namespace Service.ExchangeObserver.Jobs
                         continue;
                     
                     var vaultAccounts = vaults.Where(t =>
-                        t.FireblocksAssetsWithBalances.ContainsKey(fbAsset.FireblocksAsset)).ToList();
+                        t.FireblocksAssetsWithBalances.Any(assetAndBalance=>assetAndBalance.Asset == fbAsset.FireblocksAsset)).ToList();
                     
                     foreach (var vaultAccount in vaultAccounts)
                     {
                         var fbBalance = fbBalances.Balances.FirstOrDefault(t => t.Asset == fbAsset.FireblocksAsset && t.VaultAccount == vaultAccount.VaultAccountId);
                         if(fbBalance != null)
                         {
-                            var minBalance = vaultAccount.FireblocksAssetsWithBalances[fbAsset.FireblocksAsset];
+                            var minBalance = vaultAccount.FireblocksAssetsWithBalances?.FirstOrDefault(t=>t.Asset == fbAsset.FireblocksAsset)?.MinBalance ?? 0m;
 
                             var freeFbBalance = fbBalance.Amount - minBalance;
                             
@@ -213,6 +223,11 @@ namespace Service.ExchangeObserver.Jobs
                                         TimeStamp = DateTime.UtcNow
                                     }
                                 });
+                            }                
+                            else
+                            {
+                                _logger.LogError("ERROR");
+                                break;
                             }
                         }
                         if(borrowedBalance == 0)
@@ -271,11 +286,11 @@ namespace Service.ExchangeObserver.Jobs
                             return;
                         
                         var vaultAccounts = vaults.Where(t =>
-                            t.FireblocksAssetsWithBalances.ContainsKey(fbAsset.FireblocksAsset)).ToList();
+                            t.FireblocksAssetsWithBalances.Any(assetAndBalance=>assetAndBalance.Asset == fbAsset.FireblocksAsset)).ToList();
                         foreach (var vaultAccount in vaultAccounts)
                         {
 
-                            var minBalance = vaultAccount.FireblocksAssetsWithBalances[fbAsset.FireblocksAsset];
+                            var minBalance = vaultAccount.FireblocksAssetsWithBalances?.FirstOrDefault(t=>t.Asset == fbAsset.FireblocksAsset)?.MinBalance ?? 0m;
                             var fbBalance = fbBalances.Balances.FirstOrDefault(t => t.Asset == fbAsset.FireblocksAsset && t.VaultAccount == vaultAccount.VaultAccountId);
                             
                             var indexPrice = _indexPricesClient
@@ -315,6 +330,11 @@ namespace Service.ExchangeObserver.Jobs
                                         TimeStamp = DateTime.UtcNow
                                     }
                                 });
+                            }                
+                            else
+                            {
+                                _logger.LogError("ERROR");
+                                break;
                             }
                         }
                     }
@@ -367,6 +387,11 @@ namespace Service.ExchangeObserver.Jobs
                                 TimeStamp = DateTime.UtcNow
                             }
                         });
+                    }                
+                    else
+                    {
+                        _logger.LogError("ERROR");
+                        break;
                     }
                 }
             }
