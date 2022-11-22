@@ -17,7 +17,7 @@ namespace Service.ExchangeObserver.Services
 
         public async Task<GetBalancesResponse> GetBinanceMainBalancesAsync()
         {
-            return await _externalMarket.GetBalancesAsync(new GetBalancesRequest
+            return await _externalMarket.GetSecondaryBalancesAsync(new GetBalancesRequest
             {
                 ExchangeName = "Binance"
             });
@@ -25,7 +25,7 @@ namespace Service.ExchangeObserver.Services
 
         public async Task<GetBalancesResponse> GetBinanceMarginBalancesAsync()
         {
-            return await _externalMarket.GetSecondaryBalancesAsync(new GetBalancesRequest
+            return await _externalMarket.GetBalancesAsync(new GetBalancesRequest
             {
                 ExchangeName = "Binance"
             });
