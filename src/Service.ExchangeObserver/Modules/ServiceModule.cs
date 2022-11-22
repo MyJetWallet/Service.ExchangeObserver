@@ -3,6 +3,8 @@ using Autofac.Core;
 using Autofac.Core.Registration;
 using MyJetWallet.Domain.ExternalMarketApi;
 using MyJetWallet.Sdk.NoSql;
+using Service.Blockchain.Wallets.MyNoSql.Addresses;
+using Service.ExchangeGateway.Client;
 using Service.ExchangeObserver.Domain.Models.NoSql;
 using Service.ExchangeObserver.Jobs;
 using Service.ExchangeObserver.Services;
@@ -19,14 +21,16 @@ namespace Service.ExchangeObserver.Modules
             builder.RegisterMyNoSqlWriter<FbVaultAccountMapNoSqlEntity>((() => Program.Settings.MyNoSqlWriterUrl),FbVaultAccountMapNoSqlEntity.TableName);
             builder.RegisterMyNoSqlWriter<ObserverSettingsNoSqlEntity>((() => Program.Settings.MyNoSqlWriterUrl),ObserverSettingsNoSqlEntity.TableName);
             builder.RegisterMyNoSqlWriter<TransfersMonitorNoSqlEntity>((() => Program.Settings.MyNoSqlWriterUrl),TransfersMonitorNoSqlEntity.TableName);
+            builder.RegisterMyNoSqlWriter<VaultAssetNoSql>((() => Program.Settings.MyNoSqlWriterUrl),VaultAssetNoSql.TableName);
 
             var client = builder.CreateNoSqlClient(Program.Settings.MyNoSqlReaderHostPort, Program.LogFactory);
             builder.RegisterIndexPricesClient(client);
 
             builder.RegisterExternalMarketClient(Program.Settings.ExternalApiGrpcUrl);
             
+            builder.RegisterExchangeGatewayClient(Program.Settings.ExternalGatewayGrpcUrl);
             builder.RegisterType<BalanceExtractor>().As<IBalanceExtractor>().SingleInstance().AutoActivate();
-            builder.RegisterType<ExchangeGatewayMock>().As<IExchangeGateway>().SingleInstance().AutoActivate();
+            //builder.RegisterType<ExchangeGatewayMock>().As<IExchangeGateway>().SingleInstance().AutoActivate();
             builder.RegisterType<ExchangeCheckerJob>().AsSelf().SingleInstance().AutoActivate();
         }
     }

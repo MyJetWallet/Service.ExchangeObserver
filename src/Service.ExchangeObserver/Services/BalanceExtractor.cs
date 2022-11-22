@@ -1,18 +1,23 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using MyJetWallet.Domain.ExternalMarketApi;
 using MyJetWallet.Domain.ExternalMarketApi.Dto;
 using MyJetWallet.Domain.ExternalMarketApi.Models;
+using MyNoSqlServer.Abstractions;
+using Service.Blockchain.Wallets.MyNoSql.Addresses;
 
 namespace Service.ExchangeObserver.Services
 {
     public class BalanceExtractor : IBalanceExtractor
     {
         private readonly IExternalMarket _externalMarket;
+        private readonly IMyNoSqlServerDataWriter<VaultAssetNoSql> _fbWriter;
 
-        public BalanceExtractor(IExternalMarket externalMarket)
+        public BalanceExtractor(IExternalMarket externalMarket, IMyNoSqlServerDataWriter<VaultAssetNoSql> fbWriter)
         {
             _externalMarket = externalMarket;
+            _fbWriter = fbWriter;
         }
 
         public async Task<GetBalancesResponse> GetBinanceMainBalancesAsync()
@@ -33,9 +38,19 @@ namespace Service.ExchangeObserver.Services
 
         public async Task<FbBalancesResponse> GetFireblocksBalancesAsync()
         {
+            var assets = await _fbWriter.GetAsync();
+
+            var balances = assets.Select(t => new FbBalance
+            {
+                Amount = t.VaultAsset.Available,
+                Asset = t.AssetSymbol,
+                Network = t.AssetNetwork,
+                VaultAccount = int.Parse(t.VaultAccountId)
+            }).ToList();
+            
             return new FbBalancesResponse
             {
-                Balances = new List<FbBalance>()
+                Balances = balances
             };
         }
     }
@@ -56,6 +71,7 @@ namespace Service.ExchangeObserver.Services
     {
         public decimal Amount { get; set; }
         public string Asset { get; set; }
+        public string Network { get; set; }
         public int VaultAccount { get; set; }
     }
 }

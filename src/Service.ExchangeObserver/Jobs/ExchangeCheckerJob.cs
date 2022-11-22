@@ -9,11 +9,14 @@ using MyJetWallet.Domain.ExternalMarketApi;
 using MyJetWallet.Domain.ExternalMarketApi.Dto;
 using MyJetWallet.Sdk.Service.Tools;
 using MyNoSqlServer.Abstractions;
+using Service.ExchangeGateway.Grpc;
+using Service.ExchangeGateway.Grpc.Models.Exchange;
 using Service.ExchangeObserver.Domain.Models;
 using Service.ExchangeObserver.Domain.Models.NoSql;
 using Service.ExchangeObserver.Postgres;
 using Service.ExchangeObserver.Services;
 using Service.IndexPrices.Client;
+using ExchangeResponse = Service.ExchangeGateway.Grpc.Models.Exchange.ExchangeResponse;
 
 namespace Service.ExchangeObserver.Jobs
 {
@@ -91,8 +94,11 @@ namespace Service.ExchangeObserver.Jobs
                     ? borrowedBalance - marginBalance
                     : marginBalance;
 
-                var result = await _exchangeGateway.TransferMarginToBorrowed(borrowedPosition.Symbol, paymentAmount);
-                if (result.IsSuccess)
+                //var result = await _externalMarket.TransferMarginToBorrowed(borrowedPosition.Symbol, paymentAmount); //TODO: transfer to borrowed
+                var result = new ExchangeResponse()
+                {
+                };
+                if (result.Error == null)
                 {
                     borrowedBalance -= paymentAmount;
                     await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
@@ -132,8 +138,13 @@ namespace Service.ExchangeObserver.Jobs
                         ? borrowedBalance - mainBalance.Balance
                         : mainBalance.Balance;
                     
-                    result = await _exchangeGateway.TransferBinanceMainToMargin(borrowedPosition.Symbol, paymentAmount);
-                    if (result.IsSuccess)
+                    result = await _exchangeGateway.TransferBinanceMainToMargin(new TransferBinanceMainToMarginRequest
+                    {
+                        AssetSymbol = borrowedPosition.Symbol,
+                        Amount = paymentAmount,
+                        RequestId = Guid.NewGuid().ToString()
+                    });
+                    if (result.Error == null)
                     {
                         borrowedBalance -= paymentAmount;
                         await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
@@ -185,7 +196,7 @@ namespace Service.ExchangeObserver.Jobs
                     
                     foreach (var vaultAccount in vaultAccounts)
                     {
-                        var fbBalance = fbBalances.Balances.FirstOrDefault(t => t.Asset == fbAsset.FireblocksAsset && t.VaultAccount == vaultAccount.VaultAccountId);
+                        var fbBalance = fbBalances.Balances.FirstOrDefault(t => t.Asset == fbAsset.FireblocksAsset && t.VaultAccount == vaultAccount.VaultAccountId && t.Network == fbAsset.FireblocksNetwork);
                         if(fbBalance != null)
                         {
                             var minBalance = vaultAccount.FireblocksAssetsWithBalances?.FirstOrDefault(t=>t.Asset == fbAsset.FireblocksAsset)?.MinBalance ?? 0m;
@@ -195,12 +206,18 @@ namespace Service.ExchangeObserver.Jobs
                             paymentAmount = borrowedBalance > freeFbBalance
                                 ? borrowedBalance - freeFbBalance
                                 : freeFbBalance;
-                            
-                             result = await _exchangeGateway.TransferFireblocksToBinance(fbAsset.FireblocksAsset,
-                                    fbAsset.FireblocksNetwork, vaultAccount.VaultAccountId,
-                                    fbAsset.BinanceAssetSymbol, paymentAmount);
+
+                            result = await _exchangeGateway.TransferFireblocksToBinance(
+                                new TransferFireblocksToBinanceRequest
+                                {
+                                    AssetSymbol = fbAsset.FireblocksAsset,
+                                    AssetNetwork = fbAsset.FireblocksNetwork,
+                                    VaultAccountId = vaultAccount.VaultAccountId,
+                                    Amount = paymentAmount,
+                                    RequestId = Guid.NewGuid().ToString()
+                                });
                              
-                            if (result.IsSuccess)
+                            if (result.Error == null)
                             {
                                 borrowedBalance -= paymentAmount;
                                 
@@ -291,7 +308,7 @@ namespace Service.ExchangeObserver.Jobs
                         {
 
                             var minBalance = vaultAccount.FireblocksAssetsWithBalances?.FirstOrDefault(t=>t.Asset == fbAsset.FireblocksAsset)?.MinBalance ?? 0m;
-                            var fbBalance = fbBalances.Balances.FirstOrDefault(t => t.Asset == fbAsset.FireblocksAsset && t.VaultAccount == vaultAccount.VaultAccountId);
+                            var fbBalance = fbBalances.Balances.FirstOrDefault(t => t.Asset == fbAsset.FireblocksAsset && t.VaultAccount == vaultAccount.VaultAccountId && t.Network == fbAsset.FireblocksNetwork);
                             
                             var indexPrice = _indexPricesClient
                                 .GetIndexPriceByAssetAsync(asset.AssetSymbol).UsdPrice;
@@ -303,12 +320,18 @@ namespace Service.ExchangeObserver.Jobs
                                 : freeUsd;
 
                             var paymentAmount = paymentAmountUsd / indexPrice;
-                            
-                            var result = await _exchangeGateway.TransferFireblocksToBinance(fbAsset.FireblocksAsset,
-                                fbAsset.FireblocksNetwork, vaultAccount.VaultAccountId, fbAsset.BinanceAssetSymbol,
-                                paymentAmount);
-                            
-                            if(result.IsSuccess)
+
+                            var result = await _exchangeGateway.TransferFireblocksToBinance(
+                                new TransferFireblocksToBinanceRequest
+                                {
+                                    AssetSymbol = fbAsset.FireblocksAsset,
+                                    AssetNetwork = fbAsset.FireblocksNetwork,
+                                    VaultAccountId = vaultAccount.VaultAccountId,
+                                    Amount = paymentAmount,
+                                    RequestId = Guid.NewGuid().ToString()
+                                });
+
+                            if (result.Error == null)
                             {
                                 asset.LockedUntil = DateTime.UtcNow + TimeSpan.FromMinutes(30);
                                 await _assetWriter.InsertOrReplaceAsync(asset);
@@ -362,10 +385,26 @@ namespace Service.ExchangeObserver.Jobs
                         : balanceInUsd;
                     
                     var paymentAmount = paymentAmountUsd / indexPrice;
-                    var result =
-                        await _exchangeGateway.TransferFromBinanceMarginToFireblocks(asset.AssetSymbol, paymentAmount);
+                    
+                    var fbAssets =
+                        await _bToFbWriter.GetAsync(
+                            BinanceToFireblocksAssetNoSqlEntity.GeneratePartitionKey(asset.AssetSymbol));
+                    var fbAsset = fbAssets.FirstOrDefault();
+                    var vaultAccount = vaults.FirstOrDefault(t =>
+                        t.FireblocksAssetsWithBalances.Any(assetAndBalance=>assetAndBalance.Asset == fbAsset.FireblocksAsset));
 
-                    if (result.IsSuccess)
+                    var result =
+                        await _exchangeGateway.TransferFromBinanceMarginToFireblocks(
+                            new TransferFromBinanceMarginToFireblocksRequest
+                            {
+                                AssetSymbol = fbAsset.FireblocksAsset,
+                                AssetNetwork = fbAsset.FireblocksNetwork,
+                                VaultAccountId = vaultAccount.VaultAccountId,
+                                Amount = paymentAmount,
+                                RequestId = Guid.NewGuid().ToString()
+                            });
+                    
+                    if (result.Error == null)
                     {
                         asset.LockedUntil = DateTime.UtcNow + TimeSpan.FromMinutes(30);
                         await _assetWriter.InsertOrReplaceAsync(asset);
@@ -398,29 +437,6 @@ namespace Service.ExchangeObserver.Jobs
 
         }
         
-                    
-        //проверить маржин аккаунт
-        //проверить основной аккаунт
-        //отправить с фаерблока
-        //если нет других трансферов с фаерблока
-            
-        // fb asset network
-        // exchange asset
-        // min transfer 
-            
-        // weight
-        // exchange asset 
-            
-        // fb vault account 
-        // asset
-        // min balance 
-        
-        //gateway 
-        // transfer binance - fireblock
-        // binance margin - main 
-        // main - margin 
-        // transfer fireblocks - binance
-
         public void Start()
         {
             _timer.Start();
