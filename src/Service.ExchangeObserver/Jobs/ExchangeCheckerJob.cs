@@ -62,8 +62,15 @@ namespace Service.ExchangeObserver.Jobs
 
         private async Task DoTime()
         {
-            await CheckExchangeBorrows();
-            await CheckExchangeBalance();
+            try
+            {
+                await CheckExchangeBorrows();
+                await CheckExchangeBalance();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "When checking binance balances");
+            }
         }
 
         private async Task CheckExchangeBorrows()
@@ -365,6 +372,9 @@ namespace Service.ExchangeObserver.Jobs
                             var fbBalance = fbBalances.Balances.FirstOrDefault(t =>
                                 t.Asset == fbAsset.FireblocksAsset && t.VaultAccount == vaultAccount.VaultAccountId &&
                                 t.Network == fbAsset.FireblocksNetwork);
+
+                            if(fbBalance == null)
+                                continue;
 
                             var indexPrice = _indexPricesClient
                                 .GetIndexPriceByAssetAsync(asset.AssetSymbol).UsdPrice;
