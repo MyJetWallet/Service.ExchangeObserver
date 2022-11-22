@@ -17,7 +17,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0" />
-    <PackageReference Include="MyJetWallet.Domain.ExternalMarketApi" Version="1.4.6" />
+    <PackageReference Include="MyJetWallet.Domain.ExternalMarketApi" Version="1.4.7" />
     <PackageReference Include="MyJetWallet.Sdk.GrpcMetrics" Version="2.2.1" />
     <PackageReference Include="MyJetWallet.Sdk.GrpcSchema" Version="1.0.6" />
     <PackageReference Include="MyJetWallet.Sdk.NoSql" Version="2.2.11" />
