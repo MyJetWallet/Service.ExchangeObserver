@@ -23,9 +23,9 @@ namespace Service.ExchangeObserver.Postgres
             modelBuilder.HasDefaultSchema(Schema);
             
             modelBuilder.Entity<ObserverTransfer>().ToTable(TransfersTableName);
-            modelBuilder.Entity<ObserverTransfer>().Property(e => e.Id).ValueGeneratedOnAdd();
-            modelBuilder.Entity<ObserverTransfer>().HasKey(e => e.Id);
-            
+            modelBuilder.Entity<ObserverTransfer>().Property(e => e.TransferId).ValueGeneratedOnAdd();
+            modelBuilder.Entity<ObserverTransfer>().HasKey(e => e.TransferId);
+
             modelBuilder.Entity<ObserverAsset>().ToTable(AssetsTableName);
             modelBuilder.Entity<ObserverAsset>().HasKey(e => new {e.AssetSymbol, e.Network});
             

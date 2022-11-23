@@ -12,7 +12,7 @@ using Service.ExchangeObserver.Postgres;
 namespace Service.ExchangeObserver.Postgres.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20221121170344_InitialCreate")]
+    [Migration("20221123103505_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -26,10 +26,41 @@ namespace Service.ExchangeObserver.Postgres.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Service.ExchangeObserver.Domain.Models.ObserverAsset", b =>
+                {
+                    b.Property<string>("AssetSymbol")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Network")
+                        .HasColumnType("text");
+
+                    b.Property<string>("BinanceSymbol")
+                        .HasColumnType("text");
+
+                    b.Property<int>("LockTimeInMin")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("LockedUntil")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("MinTransferAmount")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("Weight")
+                        .HasColumnType("integer");
+
+                    b.HasKey("AssetSymbol", "Network");
+
+                    b.ToTable("assets", "exchangeobserver");
+                });
+
             modelBuilder.Entity("Service.ExchangeObserver.Domain.Models.ObserverTransfer", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("text");
+                    b.Property<int>("TransferId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("TransferId"));
 
                     b.Property<decimal>("Amount")
                         .HasColumnType("numeric");
@@ -52,7 +83,7 @@ namespace Service.ExchangeObserver.Postgres.Migrations
                     b.Property<string>("To")
                         .HasColumnType("text");
 
-                    b.HasKey("Id");
+                    b.HasKey("TransferId");
 
                     b.ToTable("transfers", "exchangeobserver");
                 });

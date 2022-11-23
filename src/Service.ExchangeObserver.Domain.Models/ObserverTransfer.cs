@@ -7,7 +7,7 @@ namespace Service.ExchangeObserver.Domain.Models
     public class ObserverTransfer
     {
         [DataMember(Order = 1)]
-        public int Id { get; set; }
+        public int TransferId { get; set; }
         [DataMember(Order = 2)]
         public string From { get; set; }
         [DataMember(Order = 3)]

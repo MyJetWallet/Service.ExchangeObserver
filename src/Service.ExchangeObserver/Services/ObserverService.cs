@@ -110,7 +110,7 @@ namespace Service.ExchangeObserver.Services
 
             if (request.LastSeenId != 0)
             {
-                query = query.Where(t => t.Id < request.LastSeenId);
+                query = query.Where(t => t.TransferId < request.LastSeenId);
             }
 
 
@@ -136,7 +136,7 @@ namespace Service.ExchangeObserver.Services
                                          t.Reason.Contains(request.SearchText));
             }
 
-            query = query.OrderByDescending(t => t.Id).Take(request.Take);
+            query = query.OrderByDescending(t => t.TransferId).Take(request.Take);
 
             await foreach (var transfer in query.AsAsyncEnumerable())
             {
