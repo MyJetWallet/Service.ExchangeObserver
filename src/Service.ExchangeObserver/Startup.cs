@@ -35,7 +35,7 @@ namespace Service.ExchangeObserver
         {
             app.ConfigureJetWallet(env, endpoints =>
             {
-                endpoints.MapGrpcSchema<HelloService, IHelloService>();
+                endpoints.MapGrpcSchema<ObserverService, IObserverService>();
             });
         }
 

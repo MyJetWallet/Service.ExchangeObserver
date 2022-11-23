@@ -12,15 +12,17 @@ namespace Service.ExchangeObserver.Domain.Models.NoSql
         public static string GenerateRowKey(int vaultAccountId) => vaultAccountId.ToString();
         
         public int VaultAccountId { get; set; }
+        public int Weight { get; set; }
         public List<AssetAndBalance> FireblocksAssetsWithBalances { get; set; }
         
-        public static FbVaultAccountMapNoSqlEntity Create(int vaultAccountId, List<AssetAndBalance> fireblocksAssets)
+        public static FbVaultAccountMapNoSqlEntity Create(int vaultAccountId, int weight, List<AssetAndBalance> fireblocksAssets)
         {
             return new FbVaultAccountMapNoSqlEntity
             {
                 PartitionKey = GeneratePartitionKey(),
                 RowKey = GenerateRowKey(vaultAccountId),
                 VaultAccountId = vaultAccountId,
+                Weight = weight,
                 FireblocksAssetsWithBalances = fireblocksAssets,
             };
         }

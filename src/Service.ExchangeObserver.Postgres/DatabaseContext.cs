@@ -7,8 +7,10 @@ namespace Service.ExchangeObserver.Postgres
     public class DatabaseContext : MyDbContext
     {
         public DbSet<ObserverTransfer> Transfers { get; set; }
+        public DbSet<ObserverAsset> Assets { get; set; }
 
         public const string TransfersTableName = "transfers";
+        public const string AssetsTableName = "assets";
 
         public const string Schema = "exchangeobserver";
 
@@ -21,7 +23,11 @@ namespace Service.ExchangeObserver.Postgres
             modelBuilder.HasDefaultSchema(Schema);
             
             modelBuilder.Entity<ObserverTransfer>().ToTable(TransfersTableName);
+            modelBuilder.Entity<ObserverTransfer>().Property(e => e.Id).ValueGeneratedOnAdd();
             modelBuilder.Entity<ObserverTransfer>().HasKey(e => e.Id);
+            
+            modelBuilder.Entity<ObserverAsset>().ToTable(AssetsTableName);
+            modelBuilder.Entity<ObserverAsset>().HasKey(e => new {e.AssetSymbol, e.Network});
             
             base.OnModelCreating(modelBuilder);
         }
@@ -29,6 +35,12 @@ namespace Service.ExchangeObserver.Postgres
         public async Task<int> UpsertAsync(IEnumerable<ObserverTransfer> entities)
         {
             var result = await Transfers.UpsertRange(entities).AllowIdentityMatch().RunAsync();
+            return result;
+        }
+        
+        public async Task<int> UpsertAsync(IEnumerable<ObserverAsset> entities)
+        {
+            var result = await Assets.UpsertRange(entities).AllowIdentityMatch().RunAsync();
             return result;
         }
     }

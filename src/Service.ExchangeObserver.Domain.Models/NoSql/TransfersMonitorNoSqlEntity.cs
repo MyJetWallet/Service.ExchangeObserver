@@ -12,18 +12,24 @@ namespace Service.ExchangeObserver.Domain.Models.NoSql
         public static string GenerateRowKey(string asset) => asset;
     
         public string Asset { get; set; }
-        public decimal DebtAmount { get; set; }
+        public decimal Amount { get; set; }
         public DateTime LastTs { get; set; }
+        public string Reason { get; set; }
+        public string Comment { get; set; }
+        public string Type { get; set; }
+
         
-        public static TransfersMonitorNoSqlEntity Create(string asset, decimal debt, DateTime timestamp)
+        public static TransfersMonitorNoSqlEntity Create(string asset, decimal debt, DateTime timestamp, string reason, string comment, string type)
         {
             return new TransfersMonitorNoSqlEntity
             {
                 PartitionKey = GeneratePartitionKey(),
                 RowKey = GenerateRowKey(asset),
                 Asset = asset,
-                DebtAmount = debt,
-                LastTs = timestamp
+                Amount = debt,
+                LastTs = timestamp,
+                Comment = comment,
+                Reason = reason
             };
         }
     }

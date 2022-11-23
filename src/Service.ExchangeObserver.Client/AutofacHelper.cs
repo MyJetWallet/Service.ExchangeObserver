@@ -11,7 +11,7 @@ namespace Service.ExchangeObserver.Client
         {
             var factory = new ExchangeObserverClientFactory(grpcServiceUrl);
 
-            builder.RegisterInstance(factory.GetHelloService()).As<IHelloService>().SingleInstance();
+            builder.RegisterInstance(factory.GetHelloService()).As<IObserverService>().SingleInstance();
         }
     }
 }

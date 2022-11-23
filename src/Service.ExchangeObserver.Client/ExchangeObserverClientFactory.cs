@@ -11,6 +11,6 @@ namespace Service.ExchangeObserver.Client
         {
         }
 
-        public IHelloService GetHelloService() => CreateGrpcService<IHelloService>();
+        public IObserverService GetHelloService() => CreateGrpcService<IObserverService>();
     }
 }

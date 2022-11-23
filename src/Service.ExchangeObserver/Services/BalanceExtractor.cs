@@ -12,12 +12,12 @@ namespace Service.ExchangeObserver.Services
     public class BalanceExtractor : IBalanceExtractor
     {
         private readonly IExternalMarket _externalMarket;
-        private readonly IMyNoSqlServerDataWriter<VaultAssetNoSql> _fbWriter;
+        private readonly IMyNoSqlServerDataReader<VaultAssetNoSql> _fbReader;
 
-        public BalanceExtractor(IExternalMarket externalMarket, IMyNoSqlServerDataWriter<VaultAssetNoSql> fbWriter)
+        public BalanceExtractor(IExternalMarket externalMarket, IMyNoSqlServerDataReader<VaultAssetNoSql> fbReader)
         {
             _externalMarket = externalMarket;
-            _fbWriter = fbWriter;
+            _fbReader = fbReader;
         }
 
         public async Task<GetBalancesResponse> GetBinanceMainBalancesAsync()
@@ -38,7 +38,7 @@ namespace Service.ExchangeObserver.Services
 
         public async Task<FbBalancesResponse> GetFireblocksBalancesAsync()
         {
-            var assets = await _fbWriter.GetAsync();
+            var assets=  _fbReader.Get();
 
             var balances = assets.Select(t => new FbBalance
             {
