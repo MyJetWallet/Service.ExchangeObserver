@@ -29,7 +29,8 @@ namespace Service.ExchangeObserver.Domain.Models.NoSql
                 Amount = debt,
                 LastTs = timestamp,
                 Comment = comment,
-                Reason = reason
+                Reason = reason,
+                Type = type
             };
         }
     }
