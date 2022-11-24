@@ -91,7 +91,7 @@ namespace Service.ExchangeObserver.Jobs
                         continue;
                     }
 
-                    paidAmount = await TransferFromMainAccount(borrowedPosition.Symbol, borrowedBalance, mainBalances.Balances ?? new List<ExchangeBalance>());
+                    paidAmount = await TransferFromMainAccount(borrowedPosition.Symbol, borrowedBalance, assets, mainBalances.Balances ?? new List<ExchangeBalance>());
                     borrowedBalance -= paidAmount;
                     if (borrowedBalance == 0)
                     {
@@ -125,7 +125,7 @@ namespace Service.ExchangeObserver.Jobs
         private async Task<decimal> PayFromMarginAccount(ExchangeBalance borrowedPosition)
         {
             var borrowedBalance = borrowedPosition.Borrowed;
-            var marginBalance = borrowedPosition.Balance;
+            var marginBalance = borrowedPosition.PositiveBalance;
             var paymentAmount = Math.Min(marginBalance, borrowedBalance);
             if (paymentAmount == 0)
                 return 0;
@@ -168,8 +168,13 @@ namespace Service.ExchangeObserver.Jobs
             }
 
         }
-        private async Task<decimal> TransferFromMainAccount(string symbol, decimal borrowedBalance, List<ExchangeBalance> balances)
+        private async Task<decimal> TransferFromMainAccount(string symbol, decimal borrowedBalance,
+            List<ObserverAsset> assets, List<ExchangeBalance> balances)
         {
+            var asset = assets.FirstOrDefault(t => t.BinanceSymbol == symbol && t.IsEnabled);
+            if(asset == null)
+                return 0;
+            
             var mainBalance = balances.FirstOrDefault(t => t.Symbol == symbol);
             if (mainBalance == null)
                 return 0;
@@ -225,7 +230,7 @@ namespace Service.ExchangeObserver.Jobs
                 return (0, false);
 
             //Try to process full amount
-            foreach (var asset in assets.Where(t => t.BinanceSymbol == symbol).OrderByDescending(t => t.Weight))
+            foreach (var asset in assets.Where(t => t.BinanceSymbol == symbol && t.IsEnabled).OrderByDescending(t => t.Weight))
             {
                 foreach (var vaultAccount in vaultAccounts.OrderByDescending(t=>t.Weight))
                 {

@@ -13,5 +13,6 @@ namespace Service.ExchangeObserver.Domain.Models
         [DataMember(Order = 5)] public DateTime LockedUntil { get; set; }
         [DataMember(Order = 6)] public string BinanceSymbol { get; set; }
         [DataMember(Order = 7)] public int LockTimeInMin { get; set; }
+        [DataMember(Order = 8)] public bool IsEnabled { get; set; }
     }
 }

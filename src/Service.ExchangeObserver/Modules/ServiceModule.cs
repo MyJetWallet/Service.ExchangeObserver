@@ -16,7 +16,6 @@ namespace Service.ExchangeObserver.Modules
     {
         protected override void Load(ContainerBuilder builder)
         {
-            builder.RegisterMyNoSqlWriter<BinanceExchangeAssetNoSqlEntity>((() => Program.Settings.MyNoSqlWriterUrl),BinanceExchangeAssetNoSqlEntity.TableName);
             builder.RegisterMyNoSqlWriter<FbVaultAccountMapNoSqlEntity>((() => Program.Settings.MyNoSqlWriterUrl),FbVaultAccountMapNoSqlEntity.TableName);
             builder.RegisterMyNoSqlWriter<ObserverSettingsNoSqlEntity>((() => Program.Settings.MyNoSqlWriterUrl),ObserverSettingsNoSqlEntity.TableName);
             builder.RegisterMyNoSqlWriter<TransfersMonitorNoSqlEntity>((() => Program.Settings.MyNoSqlWriterUrl),TransfersMonitorNoSqlEntity.TableName);
