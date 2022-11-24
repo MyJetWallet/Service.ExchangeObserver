@@ -231,7 +231,7 @@ namespace Service.ExchangeObserver.Jobs
                         .FirstOrDefault(t => t.Asset == asset.AssetSymbol)?.MinBalance ?? 0m;
 
                     var minTransfer = asset.MinTransferAmount;
-                    var paymentAmount = borrowedBalance;
+                    var paymentAmount = borrowedBalance + asset.FireblockToBinanceFee;
 
                     if (balance - minBalance < paymentAmount)
                         continue;
@@ -265,9 +265,8 @@ namespace Service.ExchangeObserver.Jobs
                         .FirstOrDefault(t => t.Asset == asset.AssetSymbol)?.MinBalance ?? 0m;
 
                     var minTransfer = asset.MinTransferAmount;
-
-                    var paymentAmount = Math.Min(borrowedBalance, balance-minBalance);
                     
+                    var paymentAmount = Math.Min(borrowedBalance + asset.FireblockToBinanceFee, balance-minBalance);
                     if (paymentAmount < minTransfer)
                         continue;
                     
