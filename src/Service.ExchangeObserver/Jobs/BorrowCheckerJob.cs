@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MyJetWallet.Domain.ExternalMarketApi;
 using MyJetWallet.Domain.ExternalMarketApi.Dto;
@@ -15,7 +14,6 @@ using Service.ExchangeGateway.Grpc;
 using Service.ExchangeGateway.Grpc.Models.Exchange;
 using Service.ExchangeObserver.Domain.Models;
 using Service.ExchangeObserver.Domain.Models.NoSql;
-using Service.ExchangeObserver.Postgres;
 using Service.ExchangeObserver.Services;
 using Service.IndexPrices.Client;
 
@@ -29,22 +27,21 @@ namespace Service.ExchangeObserver.Jobs
 
         private readonly IMyNoSqlServerDataWriter<FbVaultAccountMapNoSqlEntity> _vaultsWriter;
         private readonly IMyNoSqlServerDataWriter<ObserverSettingsNoSqlEntity> _settingWriter;
-        private readonly IMyNoSqlServerDataWriter<TransfersMonitorNoSqlEntity> _monitoringWriter;
 
         private readonly IBalanceExtractor _balanceExtractor;
         private readonly IExchangeGateway _exchangeGateway;
-        private readonly DbContextOptionsBuilder<DatabaseContext> _dbContextOptionsBuilder;
         private readonly IExternalMarket _externalMarket;
+
+        private readonly ObserverJobHelper _helper;
 
         public ExchangeCheckerJob(IIndexPricesClient indexPricesClient, 
             ILogger<ExchangeCheckerJob> logger,
             IBalanceExtractor balanceExtractor,
             IMyNoSqlServerDataWriter<FbVaultAccountMapNoSqlEntity> vaultsWriter,
             IMyNoSqlServerDataWriter<ObserverSettingsNoSqlEntity> settingWriter, 
-            IExchangeGateway exchangeGateway,
-            IMyNoSqlServerDataWriter<TransfersMonitorNoSqlEntity> monitoringWriter,
-            DbContextOptionsBuilder<DatabaseContext> dbContextOptionsBuilder, 
-            IExternalMarket externalMarket)
+            IExchangeGateway exchangeGateway, 
+            IExternalMarket externalMarket, 
+            ObserverJobHelper helper)
         {
             _indexPricesClient = indexPricesClient;
             _logger = logger;
@@ -52,9 +49,8 @@ namespace Service.ExchangeObserver.Jobs
             _vaultsWriter = vaultsWriter;
             _settingWriter = settingWriter;
             _exchangeGateway = exchangeGateway;
-            _monitoringWriter = monitoringWriter;
-            _dbContextOptionsBuilder = dbContextOptionsBuilder;
             _externalMarket = externalMarket;
+            _helper = helper;
 
             _timer = MyTaskTimer.Create<ExchangeCheckerJob>(TimeSpan.FromSeconds(Program.Settings.TimerPeriodInSec),
                 logger, DoTime);
@@ -68,7 +64,7 @@ namespace Service.ExchangeObserver.Jobs
 
         private async Task CheckExchangeBorrows()
         {
-            var assets = await GetAssets();
+            var assets = await _helper.GetAssets();
             var marginBalances = await _balanceExtractor.GetBinanceMarginBalancesAsync();
             var mainBalances = await _balanceExtractor.GetBinanceMainBalancesAsync();
             var fbBalances = await _balanceExtractor.GetFireblocksBalancesAsync();
@@ -87,7 +83,7 @@ namespace Service.ExchangeObserver.Jobs
 
                     if (borrowedBalance == 0)
                     {
-                        await ResetMonitor(borrowedPosition.Symbol);
+                        await _helper.ResetMonitor(borrowedPosition.Symbol);
                         continue;
                     }
 
@@ -95,7 +91,7 @@ namespace Service.ExchangeObserver.Jobs
                     borrowedBalance -= paidAmount;
                     if (borrowedBalance == 0)
                     {
-                        await ResetMonitor(borrowedPosition.Symbol);
+                        await _helper.ResetMonitor(borrowedPosition.Symbol);
                         continue;
                     }
 
@@ -104,18 +100,18 @@ namespace Service.ExchangeObserver.Jobs
                     borrowedBalance -= paidAmount;
                     if (borrowedBalance == 0)
                     {
-                        await ResetMonitor(borrowedPosition.Symbol);
+                        await _helper.ResetMonitor(borrowedPosition.Symbol);
                         continue;
                     }
                     if (borrowedBalance != 0)
                     {
-                        await AddToMonitor(borrowedPosition.Symbol, borrowedBalance, isProcessed ?"Not enough balance" : "Asset payment in process", "", "Depth");
+                        await _helper.AddToMonitor(borrowedPosition.Symbol, borrowedBalance, isProcessed ?"Not enough balance" : "Asset payment in process", "", "Depth");
                         _logger.LogWarning($"Unable to repay for borrowed asset {borrowedPosition.Symbol}. Unpaid amount is {borrowedBalance}. Asset is processed {isProcessed}");
                     }
                 }
                 catch (Exception e)
                 {
-                    await AddToMonitor(borrowedPosition.Symbol, borrowedBalance, "Error", e.Message, "Depth");
+                    await _helper.AddToMonitor(borrowedPosition.Symbol, borrowedBalance, "Error", e.Message, "Depth");
                     _logger.LogError(e, "Unable to repay for borrowed asset {asset}. Unpaid amount is {borrowed}", borrowedPosition.Symbol, borrowedBalance);
                 }
             }
@@ -141,23 +137,20 @@ namespace Service.ExchangeObserver.Jobs
                 if (exResult.IsError)
                     throw new Exception($"Unable to repay. Error {exResult.ErrorMessage}");
 
-                await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-                await context.UpsertAsync(new[]
+                var transfer = new ObserverTransfer
                 {
-                    new ObserverTransfer
-                    {
-                        From = "BinanceMargin",
-                        To = "BinanceMarginBorrowed",
-                        Asset = borrowedPosition.Symbol,
-                        Amount = paymentAmount,
-                        IndexPrice = _indexPricesClient.GetIndexPriceByAssetAsync(borrowedPosition.Symbol)
-                            .UsdPrice,
-                        Reason =
-                            $"Borrowed {borrowedBalance} {borrowedPosition.Symbol}. Repay from Binance Margin. Amount {paymentAmount}",
-                        TimeStamp = DateTime.UtcNow
-                    }
-                });
-                
+                    From = "BinanceMargin",
+                    To = "BinanceMarginBorrowed",
+                    Asset = borrowedPosition.Symbol,
+                    Amount = paymentAmount,
+                    IndexPrice = _indexPricesClient.GetIndexPriceByAssetAsync(borrowedPosition.Symbol)
+                        .UsdPrice,
+                    Reason =
+                        $"Borrowed {borrowedBalance} {borrowedPosition.Symbol}. Repay from Binance Margin. Amount {paymentAmount}",
+                    TimeStamp = DateTime.UtcNow
+                };
+                await _helper.SaveTransfer(transfer);
+
                 return paymentAmount;
             }
             catch (Exception e)
@@ -194,24 +187,20 @@ namespace Service.ExchangeObserver.Jobs
                     });
                 if (result.Error != null)
                     throw new Exception($"Unable to transfer binance main to margin.  Error {result.Error.ToJson()}");
-                
-                
-                await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-                await context.UpsertAsync(new[]
+
+                var transfer = new ObserverTransfer
                 {
-                    new ObserverTransfer
-                    {
-                        From = "BinanceMain",
-                        To = "BinanceMargin",
-                        Asset = symbol,
-                        Amount = paymentAmount,
-                        IndexPrice = _indexPricesClient.GetIndexPriceByAssetAsync(symbol)
-                            .UsdPrice,
-                        Reason =
-                            $"Borrowed {borrowedBalance} {symbol}. Transfer from Binance Main to Margin. Amount {paymentAmount}",
-                        TimeStamp = DateTime.UtcNow
-                    }
-                });
+                    From = "BinanceMain",
+                    To = "BinanceMargin",
+                    Asset = symbol,
+                    Amount = paymentAmount,
+                    IndexPrice = _indexPricesClient.GetIndexPriceByAssetAsync(symbol)
+                        .UsdPrice,
+                    Reason =
+                        $"Borrowed {borrowedBalance} {symbol}. Transfer from Binance Main to Margin. Amount {paymentAmount}",
+                    TimeStamp = DateTime.UtcNow
+                };
+                await _helper.SaveTransfer(transfer);
             
                 return paymentAmount;
             }
@@ -250,7 +239,7 @@ namespace Service.ExchangeObserver.Jobs
                         continue;
 
                     paymentAmount = await ExecuteTransferToFireblocks(asset, borrowedBalance, vaultAccount.VaultAccountId, paymentAmount, balance);
-                    await LockAsset(asset.AssetSymbol, asset.LockTimeInMin);
+                    await _helper.LockAsset(asset.AssetSymbol, asset.LockTimeInMin);
                     
                     return (paymentAmount, true);
                 }
@@ -283,7 +272,7 @@ namespace Service.ExchangeObserver.Jobs
                         continue;
                     
                     paymentAmount = await ExecuteTransferToFireblocks(asset, borrowedBalance, vaultAccount.VaultAccountId, paymentAmount, balance);
-                    await LockAsset(asset.AssetSymbol, asset.LockTimeInMin);
+                    await _helper.LockAsset(asset.AssetSymbol, asset.LockTimeInMin);
 
                     borrowedBalance -= paymentAmount;
                     totalPaidAmount += paymentAmount;
@@ -308,22 +297,19 @@ namespace Service.ExchangeObserver.Jobs
                     });
                 if (result.Error == null)
                 {
-                    await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-                    await context.UpsertAsync(new[]
+                    var transfer = new ObserverTransfer
                     {
-                        new ObserverTransfer
-                        {
-                            From = "Fireblocks",
-                            To = "Binance",
-                            Asset = asset.AssetSymbol,
-                            Amount = paymentAmount,
-                            IndexPrice = _indexPricesClient.GetIndexPriceByAssetAsync(asset.AssetSymbol)
-                                .UsdPrice,
-                            Reason =
-                                $"Borrowed {borrowedBalance} {asset.AssetSymbol}. Transfer from Fireblocks to Binance. Amount {paymentAmount}",
-                            TimeStamp = DateTime.UtcNow
-                        }
-                    });
+                        From = "Fireblocks",
+                        To = "Binance",
+                        Asset = asset.AssetSymbol,
+                        Amount = paymentAmount,
+                        IndexPrice = _indexPricesClient.GetIndexPriceByAssetAsync(asset.AssetSymbol)
+                            .UsdPrice,
+                        Reason =
+                            $"Borrowed {borrowedBalance} {asset.AssetSymbol}. Transfer from Fireblocks to Binance. Amount {paymentAmount}",
+                        TimeStamp = DateTime.UtcNow
+                    };
+                    await _helper.SaveTransfer(transfer);
                 }
                 else
                 {
@@ -340,38 +326,8 @@ namespace Service.ExchangeObserver.Jobs
 
             return paymentAmount;
         }
-        private async Task<List<ObserverAsset>> GetAssets()
-        {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
-            var assets = await context.Assets.ToListAsync();
-            return assets;
-        }
-        private async Task LockAsset(string assetSymbol, int assetLockTime)
-        {
-            await using var context = new DatabaseContext(_dbContextOptionsBuilder.Options);
 
-            var assets = await context.Assets.Where(t => t.AssetSymbol == assetSymbol).ToListAsync();
-            foreach (var asset in assets)
-            {
-                asset.LockedUntil = MaxDate(asset.LockedUntil, DateTime.UtcNow.AddMinutes(assetLockTime));
-            }
-            await context.SaveChangesAsync();
-            
-            DateTime MaxDate(DateTime currentLock, DateTime newLock)
-            {
-                var maxTicks = Math.Max(currentLock.Ticks, newLock.Ticks);
-                return new DateTime(maxTicks);
-            }
-        }
-        private async Task AddToMonitor(string symbol, decimal borrowedBalance, string reason, string comment, string type)
-        {
-            await _monitoringWriter.InsertOrReplaceAsync(TransfersMonitorNoSqlEntity.Create(symbol,borrowedBalance,  DateTime.UtcNow, reason, comment, type));
-        }
-        private async Task ResetMonitor(string asset)
-        {
-            await _monitoringWriter.DeleteAsync(TransfersMonitorNoSqlEntity.GeneratePartitionKey(),
-                TransfersMonitorNoSqlEntity.GenerateRowKey(asset));
-        }
+
         #endregion
 
         // private async Task CheckExchangeBalance()

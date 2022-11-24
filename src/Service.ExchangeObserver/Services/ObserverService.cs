@@ -53,6 +53,7 @@ namespace Service.ExchangeObserver.Services
                 asset.BinanceSymbol = request.BinanceSymbol;
                 asset.LockTimeInMin = request.LockTimeInMin;
                 asset.IsEnabled = request.IsEnabled;
+                asset.FireblockToBinanceFee = request.FireblocksToBinanceFee;
 
                 await context.UpsertAsync(new[] {asset});
                 return new OperationResponse()

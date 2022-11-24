@@ -32,12 +32,6 @@ namespace Service.ExchangeObserver.Postgres
             base.OnModelCreating(modelBuilder);
         }
         
-        public async Task<int> UpsertAsync(IEnumerable<ObserverTransfer> entities)
-        {
-            var result = await Transfers.UpsertRange(entities).AllowIdentityMatch().RunAsync();
-            return result;
-        }
-        
         public async Task<int> UpsertAsync(IEnumerable<ObserverAsset> entities)
         {
             var result = await Assets.UpsertRange(entities).AllowIdentityMatch().RunAsync();

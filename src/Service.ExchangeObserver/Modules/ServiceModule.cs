@@ -27,6 +27,7 @@ namespace Service.ExchangeObserver.Modules
             builder.RegisterExternalMarketClient(Program.Settings.ExternalApiGrpcUrl);
             
             builder.RegisterExchangeGatewayClient(Program.Settings.ExternalGatewayGrpcUrl);
+            builder.RegisterType<ObserverJobHelper>().AsSelf().SingleInstance().AutoActivate();
             builder.RegisterType<BalanceExtractor>().As<IBalanceExtractor>().SingleInstance().AutoActivate();
             //builder.RegisterType<ExchangeGatewayMock>().As<IExchangeGateway>().SingleInstance().AutoActivate();
             builder.RegisterType<ExchangeCheckerJob>().AsSelf().SingleInstance().AutoActivate();

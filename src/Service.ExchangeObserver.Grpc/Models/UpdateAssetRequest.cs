@@ -12,5 +12,6 @@ namespace Service.ExchangeObserver.Grpc.Models
         [DataMember(Order = 5)] public string BinanceSymbol { get; set; }
         [DataMember(Order = 6)] public int LockTimeInMin { get; set; }
         [DataMember(Order = 7)] public bool IsEnabled { get; set; }
+        [DataMember(Order = 8)] public decimal FireblocksToBinanceFee { get; set; }
     }
 }
