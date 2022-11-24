@@ -30,7 +30,9 @@ namespace Service.ExchangeObserver.Modules
             builder.RegisterType<ObserverJobHelper>().AsSelf().SingleInstance().AutoActivate();
             builder.RegisterType<BalanceExtractor>().As<IBalanceExtractor>().SingleInstance().AutoActivate();
             //builder.RegisterType<ExchangeGatewayMock>().As<IExchangeGateway>().SingleInstance().AutoActivate();
-            builder.RegisterType<ExchangeCheckerJob>().AsSelf().SingleInstance().AutoActivate();
+            builder.RegisterType<BorrowCheckerJob>().AsSelf().SingleInstance().AutoActivate();
+            builder.RegisterType<EquityCheckerJob>().AsSelf().SingleInstance().AutoActivate();
+
         }
     }
 }

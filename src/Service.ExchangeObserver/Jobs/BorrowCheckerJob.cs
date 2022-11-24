@@ -19,10 +19,10 @@ using Service.IndexPrices.Client;
 
 namespace Service.ExchangeObserver.Jobs
 {
-    public class ExchangeCheckerJob : IStartable
+    public class BorrowCheckerJob : IStartable
     {
         private readonly IIndexPricesClient _indexPricesClient;
-        private readonly ILogger<ExchangeCheckerJob> _logger;
+        private readonly ILogger<BorrowCheckerJob> _logger;
         private readonly MyTaskTimer _timer;
 
         private readonly IMyNoSqlServerDataWriter<FbVaultAccountMapNoSqlEntity> _vaultsWriter;
@@ -34,8 +34,8 @@ namespace Service.ExchangeObserver.Jobs
 
         private readonly ObserverJobHelper _helper;
 
-        public ExchangeCheckerJob(IIndexPricesClient indexPricesClient, 
-            ILogger<ExchangeCheckerJob> logger,
+        public BorrowCheckerJob(IIndexPricesClient indexPricesClient, 
+            ILogger<BorrowCheckerJob> logger,
             IBalanceExtractor balanceExtractor,
             IMyNoSqlServerDataWriter<FbVaultAccountMapNoSqlEntity> vaultsWriter,
             IMyNoSqlServerDataWriter<ObserverSettingsNoSqlEntity> settingWriter, 
@@ -52,14 +52,13 @@ namespace Service.ExchangeObserver.Jobs
             _externalMarket = externalMarket;
             _helper = helper;
 
-            _timer = MyTaskTimer.Create<ExchangeCheckerJob>(TimeSpan.FromSeconds(Program.Settings.TimerPeriodInSec),
+            _timer = MyTaskTimer.Create<BorrowCheckerJob>(TimeSpan.FromSeconds(Program.Settings.TimerPeriodInSec),
                 logger, DoTime);
         }
 
         private async Task DoTime()
         {
             await CheckExchangeBorrows();
-            //await CheckExchangeBalance();
         }
 
         private async Task CheckExchangeBorrows()

@@ -10,21 +10,24 @@ namespace Service.ExchangeObserver
     {
         private readonly ILogger<ApplicationLifetimeManager> _logger;
         private readonly MyNoSqlClientLifeTime _myNoSqlClientLifeTime;
-        private readonly ExchangeCheckerJob _exchangeCheckerJob;
+        private readonly BorrowCheckerJob _borrowCheckerJob;
+        private readonly EquityCheckerJob _equityCheckerJob;
 
-        public ApplicationLifetimeManager(IHostApplicationLifetime appLifetime, ILogger<ApplicationLifetimeManager> logger, MyNoSqlClientLifeTime myNoSqlClientLifeTime, ExchangeCheckerJob exchangeCheckerJob)
+        public ApplicationLifetimeManager(IHostApplicationLifetime appLifetime, ILogger<ApplicationLifetimeManager> logger, MyNoSqlClientLifeTime myNoSqlClientLifeTime, BorrowCheckerJob borrowCheckerJob, EquityCheckerJob equityCheckerJob)
             : base(appLifetime)
         {
             _logger = logger;
             _myNoSqlClientLifeTime = myNoSqlClientLifeTime;
-            _exchangeCheckerJob = exchangeCheckerJob;
+            _borrowCheckerJob = borrowCheckerJob;
+            _equityCheckerJob = equityCheckerJob;
         }
 
         protected override void OnStarted()
         {
             _logger.LogInformation("OnStarted has been called.");
             _myNoSqlClientLifeTime.Start();
-            _exchangeCheckerJob.Start();
+            _borrowCheckerJob.Start();
+            _equityCheckerJob.Start();
         }
 
         protected override void OnStopping()
