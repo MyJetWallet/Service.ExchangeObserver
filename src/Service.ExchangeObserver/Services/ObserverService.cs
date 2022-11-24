@@ -52,6 +52,7 @@ namespace Service.ExchangeObserver.Services
                 asset.MinTransferAmount = request.MinTransferAmount;
                 asset.BinanceSymbol = request.BinanceSymbol;
                 asset.LockTimeInMin = request.LockTimeInMin;
+                asset.IsEnabled = request.IsEnabled;
 
                 await context.UpsertAsync(new[] {asset});
                 return new OperationResponse()
