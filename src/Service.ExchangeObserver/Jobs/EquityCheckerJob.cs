@@ -64,7 +64,7 @@ namespace Service.ExchangeObserver.Jobs
 
                 var balances = await _balanceExtractor.GetBinanceMarginBalancesAsync();
                 var totalBalance = balances.Balances.Sum(balance =>
-                    _indexPricesClient.GetIndexPriceByAssetVolumeAsync(balance.Symbol, balance.PositiveBalance).Item2);
+                    _indexPricesClient.GetIndexPriceByAssetVolumeAsync(balance.Symbol, balance.Balance).Item2);
 
                 if (settings.MaximumExchangeBalanceUsd > totalBalance &&
                     totalBalance > settings.MinimalExchangeBalanceUsd)
