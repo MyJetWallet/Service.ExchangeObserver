@@ -74,6 +74,7 @@ namespace Service.ExchangeObserver.Jobs
 
             foreach (var borrowedPosition in borrowedPositions)
             {
+                _logger.LogInformation("Detected borrowed balance at binance. Asset {asset}. Borrowed balance {balance}", borrowedPosition.Symbol, borrowedPosition.Borrowed);
                 var borrowedBalance = borrowedPosition.Borrowed;
                 try
                 {
@@ -125,6 +126,7 @@ namespace Service.ExchangeObserver.Jobs
             if (paymentAmount == 0)
                 return 0;
             
+            _logger.LogInformation("Started executing repay at Binance Margin. Asset {asset}. Borrowed balance {balance}. Payment amount {amount}", borrowedPosition.Symbol, borrowedBalance, paymentAmount);
             try
             {
                 var exResult = await _externalMarket.MakeRepayAsync(new MakeRepayRequest
@@ -149,6 +151,8 @@ namespace Service.ExchangeObserver.Jobs
                     TimeStamp = DateTime.UtcNow
                 };
                 await _helper.SaveTransfer(transfer);
+
+                _logger.LogInformation("Executed repay at Binance Margin. Asset {asset}. Borrowed balance {balance}. Payment amount {amount}", borrowedPosition.Symbol, borrowedBalance, paymentAmount);
 
                 return paymentAmount;
             }
@@ -175,6 +179,8 @@ namespace Service.ExchangeObserver.Jobs
             if (paymentAmount == 0)
                 return 0;
             
+            _logger.LogInformation("Started executing transfer binance main to margin. Asset {asset}. Borrowed balance {balance}. Payment amount {amount}", symbol, borrowedBalance, paymentAmount);
+
             try
             {
                 var result = await _exchangeGateway.TransferBinanceMainToMargin(
@@ -201,6 +207,8 @@ namespace Service.ExchangeObserver.Jobs
                 };
                 await _helper.SaveTransfer(transfer);
             
+                _logger.LogInformation("Executed transfer binance main to margin. Asset {asset}. Borrowed balance {balance}. Payment amount {amount}", symbol, borrowedBalance, paymentAmount);
+
                 return paymentAmount;
             }
             catch (Exception e)
@@ -216,6 +224,8 @@ namespace Service.ExchangeObserver.Jobs
             var hasLockedAssets = assets.Any(t => t.BinanceSymbol == symbol && t.LockedUntil > DateTime.UtcNow);
             if (hasLockedAssets)
                 return (0, false);
+
+            _logger.LogInformation("Started executing transfer from fireblocks. Asset {asset}. Borrowed balance {balance}.", symbol, borrowedBalance);
 
             //Try to process full amount
             foreach (var asset in assets.Where(t => t.BinanceSymbol == symbol && t.IsEnabled).OrderByDescending(t => t.Weight))
@@ -240,6 +250,8 @@ namespace Service.ExchangeObserver.Jobs
                     paymentAmount = await ExecuteTransferToFireblocks(asset, borrowedBalance, vaultAccount.VaultAccountId, paymentAmount, balance);
                     await _helper.LockAsset(asset.AssetSymbol, asset.LockTimeInMin);
                     
+                    _logger.LogInformation("Executed full transfer from fireblocks. Asset {asset}. Borrowed balance {balance}. Payment amount {amount}", symbol, borrowedBalance, paymentAmount);
+
                     return (paymentAmount, true);
                 }
             }
@@ -274,6 +286,8 @@ namespace Service.ExchangeObserver.Jobs
 
                     borrowedBalance -= paymentAmount;
                     totalPaidAmount += paymentAmount;
+                    
+                    _logger.LogInformation("Executed partial transfer from fireblocks. Asset {asset}. Borrowed balance {balance}. Payment amount {amount}", symbol, borrowedBalance, paymentAmount);
                 }
             }
 
