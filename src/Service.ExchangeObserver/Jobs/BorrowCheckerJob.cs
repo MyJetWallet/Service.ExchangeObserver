@@ -258,7 +258,7 @@ namespace Service.ExchangeObserver.Jobs
 
             //Try to process partial amount
             var totalPaidAmount = 0m;
-            foreach (var asset in assets.Where(t => t.BinanceSymbol == symbol).OrderByDescending(t => t.Weight))
+            foreach (var asset in assets.Where(t => t.BinanceSymbol == symbol && t.IsEnabled).OrderByDescending(t => t.Weight))
             {
                 if(borrowedBalance == 0)
                     break;
@@ -311,14 +311,14 @@ namespace Service.ExchangeObserver.Jobs
                 {
                     var transfer = new ObserverTransfer
                     {
-                        From = "Fireblocks",
+                        From = $"Fireblocks. Vault {vaultAccountId}",
                         To = "Binance",
                         Asset = asset.AssetSymbol,
                         Amount = paymentAmount,
                         IndexPrice = _indexPricesClient.GetIndexPriceByAssetAsync(asset.AssetSymbol)
                             .UsdPrice,
                         Reason =
-                            $"Borrowed {borrowedBalance} {asset.AssetSymbol}. Transfer from Fireblocks to Binance. Amount {paymentAmount}",
+                            $"Borrowed {borrowedBalance} {asset.AssetSymbol}. Transfer from Fireblocks Vault {vaultAccountId} to Binance. Amount {paymentAmount}",
                         TimeStamp = DateTime.UtcNow
                     };
                     await _helper.SaveTransfer(transfer);
