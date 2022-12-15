@@ -318,7 +318,7 @@ namespace Service.ExchangeObserver.Jobs
                         IndexPrice = _indexPricesClient.GetIndexPriceByAssetAsync(asset.AssetSymbol)
                             .UsdPrice,
                         Reason =
-                            $"Borrowed {borrowedBalance} {asset.AssetSymbol}. Transfer from Fireblocks Vault {vaultAccountId} to Binance. Amount {paymentAmount}",
+                            $"Borrowed {borrowedBalance} {asset.AssetSymbol}. Transfer from Fireblocks Vault {vaultAccountId} to Binance. Network {asset.Network}. Amount {paymentAmount}",
                         TimeStamp = DateTime.UtcNow
                     };
                     await _helper.SaveTransfer(transfer);
