@@ -21,7 +21,7 @@
     <PackageReference Include="MyJetWallet.Sdk.GrpcMetrics" Version="2.2.1" />
     <PackageReference Include="MyJetWallet.Sdk.GrpcSchema" Version="1.0.6" />
     <PackageReference Include="MyJetWallet.Sdk.NoSql" Version="2.2.11" />
-    <PackageReference Include="MyJetWallet.Sdk.Service" Version="2.2.4" />
+    <PackageReference Include="MyJetWallet.Sdk.Service" Version="2.2.6" />
     <PackageReference Include="MyJetWallet.Service.ExchangeGateway.Client" Version="2.0.0" />
     <PackageReference Include="MyJetWallet.Service.Fireblocks.Webhook.Client" Version="1.7.2" />
     <PackageReference Include="MyJetWallet.Service.IndexPrices.Client" Version="1.7.3" />
