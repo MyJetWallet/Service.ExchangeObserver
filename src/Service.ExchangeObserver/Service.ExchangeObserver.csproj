@@ -24,7 +24,7 @@
     <PackageReference Include="MyJetWallet.Sdk.Service" Version="2.2.6" />
     <PackageReference Include="MyJetWallet.Service.ExchangeGateway.Client" Version="2.0.0" />
     <PackageReference Include="MyJetWallet.Service.Fireblocks.Webhook.Client" Version="1.7.2" />
-    <PackageReference Include="MyJetWallet.Service.IndexPrices.Client" Version="1.7.3" />
+    <PackageReference Include="MyJetWallet.Service.IndexPrices.Client" Version="1.7.5" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="prometheus-net.AspNetCore" Version="7.0.0" />
     <PackageReference Include="protobuf-net.Grpc.AspNetCore" Version="1.0.179" />
